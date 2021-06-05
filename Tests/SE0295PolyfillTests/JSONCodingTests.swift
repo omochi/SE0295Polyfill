@@ -4,18 +4,18 @@ import SwiftTypeReader
 
 final class JSONCodingTests: XCTestCase {
     func test01() throws {
-        try test(directory: URL.resources.appendingPathComponent("test01"), type: "[Command]")
+        try assertCoding(directory: URL.resources.appendingPathComponent("test01"), type: "[Command]")
     }
 
     func test02() throws {
-        try test(directory: URL.resources.appendingPathComponent("test02"), type: "[Command]")
+        try assertCoding(directory: URL.resources.appendingPathComponent("test02"), type: "[Command]")
     }
 
     func test03() throws {
-        try test(directory: URL.resources.appendingPathComponent("test03"), type: "[Command]")
+        try assertCoding(directory: URL.resources.appendingPathComponent("test03"), type: "[Command]")
     }
 
-    private func test(directory: URL, type: String) throws {
+    private func assertCoding(directory: URL, type: String, file: StaticString = #file, line: UInt = #line) throws {
         let work = try createTempDir()
         try fm.copyItem(
             at: directory.appendingPathComponent("in.swift"),
@@ -40,7 +40,7 @@ print(String(data: json, encoding: .utf8)!)
 """
         )
         let json = try String(contentsOf: sourceJSONFile)
-        XCTAssertEqual(encoded, json)
+        XCTAssertEqual(encoded, json, file: file, line: line)
     }
 
     private func runSwift(dir: URL, main: String) throws -> String {
