@@ -18,7 +18,6 @@ public final class App {
         }
 
         let enumTypes: [EnumType] = modules.flatMap { $0.types.compactMap { $0.enum } }
-
         let generator = CodeGenerator()
         for enumType in enumTypes {
             guard let dir = enumType.file?.deletingLastPathComponent() else {
@@ -26,7 +25,7 @@ public final class App {
             }
 
             let code = generator.generate(type: enumType)
-            let file = dir.appendingPathComponent("\(enumType.name)-SE0295.swift")
+            let file = dir.appendingPathComponent("\(enumType.name)-SE0295.gen.swift")
             print("generate: \(file.lastPathComponent)")
             try code.write(to: file, atomically: true, encoding: .utf8)
         }

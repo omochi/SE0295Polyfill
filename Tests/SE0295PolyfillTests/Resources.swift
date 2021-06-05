@@ -1,7 +1,7 @@
 import Foundation
 
-enum Resources {
-    static var file: URL {
+extension URL {
+    static var resources: URL {
         URL(fileURLWithPath: #file)
             .deletingLastPathComponent()
             .appendingPathComponent("Resources")

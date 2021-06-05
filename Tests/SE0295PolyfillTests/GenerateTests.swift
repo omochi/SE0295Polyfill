@@ -4,15 +4,15 @@ import SwiftTypeReader
 
 final class GenerateTests: XCTestCase {
     func test01() throws {
-        try test(directory: Resources.file.appendingPathComponent("test01"))
+        try test(directory: URL.resources.appendingPathComponent("test01"))
     }
 
     func test02() throws {
-        try test(directory: Resources.file.appendingPathComponent("test02"))
+        try test(directory: URL.resources.appendingPathComponent("test02"))
     }
 
     func test03() throws {
-        try test(directory: Resources.file.appendingPathComponent("test03"))
+        try test(directory: URL.resources.appendingPathComponent("test03"))
     }
 
     private func test(directory: URL) throws {

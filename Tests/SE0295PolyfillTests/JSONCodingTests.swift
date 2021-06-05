@@ -4,15 +4,15 @@ import SwiftTypeReader
 
 final class JSONCodingTests: XCTestCase {
     func test01() throws {
-        try test(directory: Resources.file.appendingPathComponent("test01"), type: "[Command]")
+        try test(directory: URL.resources.appendingPathComponent("test01"), type: "[Command]")
     }
 
     func test02() throws {
-        try test(directory: Resources.file.appendingPathComponent("test02"), type: "[Command]")
+        try test(directory: URL.resources.appendingPathComponent("test02"), type: "[Command]")
     }
 
     func test03() throws {
-        try test(directory: Resources.file.appendingPathComponent("test03"), type: "[Command]")
+        try test(directory: URL.resources.appendingPathComponent("test03"), type: "[Command]")
     }
 
     private func test(directory: URL, type: String) throws {
@@ -46,7 +46,7 @@ print(String(data: json, encoding: .utf8)!)
     private func runSwift(dir: URL, main: String) throws -> String {
         func compile() throws {
             let mainFile = dir.appendingPathComponent("main.swift")
-            _ = try? fm.removeItem(at: mainFile)
+//            _ = try? fm.removeItem(at: mainFile)
             try main.write(
                 to: mainFile,
                 atomically: true,
