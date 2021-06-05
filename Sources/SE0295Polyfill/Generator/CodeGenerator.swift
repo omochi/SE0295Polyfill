@@ -63,6 +63,20 @@ extension \(type.name) {
             }
         }
 
+        func encodeValue(_ c: CaseElement, _ v: AssociatedValue, _ i: Int) -> String {
+            let (_, isOptional) = unwrapOptional(v.type)
+
+            if isOptional {
+                return """
+            try nestedContainer.encodeIfPresent(\(label(of: v, i)), forKey: .\(label(of: v, i)))
+"""
+            } else {
+                return """
+            try nestedContainer.encode(\(label(of: v, i)), forKey: .\(label(of: v, i)))
+"""
+            }
+        }
+
         return """
 extension \(type.name): Encodable {
     public func encode(to encoder: Encoder) throws {
@@ -71,9 +85,9 @@ extension \(type.name): Encodable {
 \(lines: type.caseElements, { (c) in """
         case .\(c.name)\(pattern(of: c.associatedValues)):
             \(nestedContainerVar(c)) = container.nestedContainer(keyedBy: \(codingKey(c)).self, forKey: .\(c.name))
-\(lines: c.associatedValues.enumerated(), { (i, v) in """
-            try nestedContainer.encode(\(label(of: v, i)), forKey: .\(label(of: v, i)))
-"""})
+\(lines: c.associatedValues.enumerated(), { (i, v) in
+    encodeValue(c, v, i)
+})
 """})
         }
     }
@@ -83,6 +97,20 @@ extension \(type.name): Encodable {
     }
 
     private func generateDecodable(type: EnumType) -> String {
+        func decodeValue(_ c: CaseElement, _ v: AssociatedValue, _ i: Int) -> String {
+            let (type, isOptional) = unwrapOptional(v.type)
+
+            if isOptional {
+                return """
+            let \(label(of: v, i)) = try nestedContainer.decodeIfPresent(\(type).self, forKey: .\(label(of: v, i)))
+"""
+            } else {
+                return """
+            let \(label(of: v, i)) = try nestedContainer.decode(\(type).self, forKey: .\(label(of: v, i)))
+"""
+            }
+        }
+
         func decodeAssocs(_ c: CaseElement) -> String {
             if c.associatedValues.isEmpty {
                 return ""
@@ -90,11 +118,13 @@ extension \(type.name): Encodable {
 
             return """
             let nestedContainer = try container.nestedContainer(keyedBy: \(codingKey(c)).self, forKey: .\(c.name))
-\(lines: c.associatedValues.enumerated(), { (i, v) in """
-            let \(label(of: v, i)) = try nestedContainer.decode(\(v.type.name).self, forKey: .\(label(of: v, i)))
-"""})
+\(lines: c.associatedValues.enumerated(), { (i, v) in
+    decodeValue(c, v, i)
+})
 """
         }
+
+
 
         return """
 extension \(type.name): Decodable {
