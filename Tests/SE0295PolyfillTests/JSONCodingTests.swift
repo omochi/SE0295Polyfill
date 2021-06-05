@@ -46,7 +46,6 @@ print(String(data: json, encoding: .utf8)!)
     private func runSwift(dir: URL, main: String) throws -> String {
         func compile() throws {
             let mainFile = dir.appendingPathComponent("main.swift")
-//            _ = try? fm.removeItem(at: mainFile)
             try main.write(
                 to: mainFile,
                 atomically: true,
