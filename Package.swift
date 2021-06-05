@@ -9,6 +9,10 @@ let package = Package(
             name: "SE0295Polyfill",
             targets: ["SE0295Polyfill"]
         ),
+        .executable(
+            name: "se0295",
+            targets: ["se0295"]
+        )
     ],
     dependencies: [
         .package(url: "https://github.com/omochi/SwiftTypeReader", .branch("main"))
@@ -17,7 +21,7 @@ let package = Package(
         .target(
             name: "SE0295Polyfill",
             dependencies: [
-                "SwiftTypeReader"
+                .product(name: "SwiftTypeReader", package: "SwiftTypeReader")
             ]
         ),
         .testTarget(
@@ -25,5 +29,11 @@ let package = Package(
             dependencies: ["SE0295Polyfill"],
             exclude: ["Resources"]
         ),
+        .target(
+            name: "se0295",
+            dependencies: [
+                "SE0295Polyfill"
+            ]
+        )
     ]
 )

@@ -1,0 +1,13 @@
+[
+  {
+    "load" : {
+      "key" : "MyKey"
+    }
+  },
+  {
+    "store" : {
+      "key" : "MyKey",
+      "value" : 42
+    }
+  }
+]
