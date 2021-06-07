@@ -20,3 +20,14 @@ generate: Command-SE0295.gen.swift
 `App`: Command Line Tool implementation.
 
 `CodeGenerator`: Generator.
+
+# Testing
+
+## Xcode
+
+Set environment variable.
+
+```
+DYLD_LIBRARY_PATH = /Applications/Xcode12.5.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/macosx
+OS_ACTIVITY_DT_MODE = NO
+```
