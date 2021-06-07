@@ -78,7 +78,7 @@ func construct(_ c: CaseElement) -> String {
     return str
 }
 
-func unwrapOptional(_ type: Type) -> (type: Type, isWrapped: Bool) {
+func unwrapOptional(_ type: SType) -> (type: SType, isWrapped: Bool) {
     var isWrapped = false
     var type = type
     if let st = type.struct,
