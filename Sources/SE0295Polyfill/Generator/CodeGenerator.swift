@@ -2,6 +2,8 @@ import Foundation
 import SwiftTypeReader
 
 public final class CodeGenerator {
+    public init() {}
+    
     public func generate(
         type: EnumType,
         doesGenerateCodingKeys: Bool = true,
