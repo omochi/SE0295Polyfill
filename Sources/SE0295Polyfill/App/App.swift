@@ -1,6 +1,8 @@
 import Foundation
 import SwiftTypeReader
 
+let fm = FileManager.default
+
 public final class App {
     public init() {}
     
@@ -26,8 +28,17 @@ public final class App {
 
             let code = generator.generate(type: enumType)
             let file = dir.appendingPathComponent("\(enumType.name)-SE0295.gen.swift")
-            print("generate: \(file.lastPathComponent)")
-            try code.write(to: file, atomically: true, encoding: .utf8)
+            try write(data: code.data(using: .utf8)!, file: file)
         }
+    }
+
+    private func write(data: Data, file: URL) throws {
+        if fm.fileExists(atPath: file.path) {
+            let old = try Data(contentsOf: file)
+            if data == old { return }
+        }
+
+        print("generate: \(file.relativePath)")
+        try data.write(to: file, options: .atomic)
     }
 }

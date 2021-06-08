@@ -16,11 +16,14 @@ final class JSONCodingTests: XCTestCase {
     }
 
     private func assertCoding(directory: URL, type: String, file: StaticString = #file, line: UInt = #line) throws {
-        let work = try createTempDir()
+        let tempDir = try createTempDir()
         try fm.copyItem(
             at: directory.appendingPathComponent("in.swift"),
-            to: work.appendingPathComponent("in.swift")
+            to: tempDir.appendingPathComponent("in.swift")
         )
+        FileManager.default.changeCurrentDirectoryPath(tempDir.path)
+
+        let work = URL(fileURLWithPath: ".")
         try App().run(files: [work])
 
         let sourceJSONFile = directory.appendingPathComponent("json.json")
