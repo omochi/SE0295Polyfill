@@ -14,7 +14,6 @@ extension Command: Encodable {
         switch self {
         case .dumpToDisk:
             _ = container.nestedContainer(keyedBy: DumpToDiskCodingKey.self, forKey: .dumpToDisk)
-
         }
     }
 }
@@ -32,7 +31,6 @@ extension Command: Decodable {
 
         switch container.allKeys.first.unsafelyUnwrapped {
         case .dumpToDisk:
-
             self = .dumpToDisk
         }
     }

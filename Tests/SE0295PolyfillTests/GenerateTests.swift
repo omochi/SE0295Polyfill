@@ -22,9 +22,9 @@ final class GenerateTests: XCTestCase {
     private func assertGenerate(directory: URL, file: StaticString = #file, line: UInt = #line) throws {
         FileManager.default.changeCurrentDirectoryPath(directory.path)
         let reader = SwiftTypeReader.Reader()
-        let module = try reader.read(file: URL(fileURLWithPath: "in.swift"))
-        let target = try XCTUnwrap(module.types.compactMap { $0.enum }.first)
-        let code = CodeGenerator().generate(type: target)
+        let result = try reader.read(file: URL(fileURLWithPath: "in.swift"))
+        let target = try XCTUnwrap(result.module.types.compactMap { $0.enum }.first)
+        let code = try CodeGenerator().generate(type: target)
         let expected = try String(contentsOf: URL(fileURLWithPath: "out.swift"))
         XCTAssertEqual(code, expected, file: file, line: line)
     }

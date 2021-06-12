@@ -1,14 +1,8 @@
 import Foundation
 import SwiftTypeReader
 
-extension DefaultStringInterpolation {
-    mutating func appendInterpolation<S: Sequence>(
-        lines: S,
-        _ f: (S.Element) -> String
-    ) {
-        let str = lines.map { f($0) }.joined(separator: "\n")
-        self.appendInterpolation(str)
-    }
+func join(_ lines: [String], _ separator: String = "\n") -> String {
+    lines.joined(separator: separator)
 }
 
 func pascalCase(_ str: String) -> String {
@@ -78,14 +72,14 @@ func construct(_ c: CaseElement) -> String {
     return str
 }
 
-func unwrapOptional(_ type: SType) -> (type: SType, isWrapped: Bool) {
+func unwrapOptional(_ type: SType) throws -> (type: SType, isWrapped: Bool) {
     var isWrapped = false
     var type = type
     if let st = type.struct,
        st.name == "Optional",
-       st.genericsArguments.count > 0
+       try st.genericArguments().count > 0
     {
-        type = st.genericsArguments[0]
+        type = try st.genericArguments()[0]
         isWrapped = true
     }
     return (type: type, isWrapped: isWrapped)

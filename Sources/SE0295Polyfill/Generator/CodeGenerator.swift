@@ -9,7 +9,7 @@ public final class CodeGenerator {
         doesGenerateCodingKeys: Bool = true,
         doesGenerateEncodable: Bool = true,
         doesGenerateDecodable: Bool = true
-    ) -> String {
+    ) throws -> String {
         var strs: [String] = []
 
         if doesGenerateCodingKeys {
@@ -17,46 +17,66 @@ public final class CodeGenerator {
         }
 
         if doesGenerateEncodable {
-            strs.append(generateEncodable(type: type))
+            strs.append(try generateEncodable(type: type))
         }
 
         if doesGenerateDecodable {
-            strs.append(generateDecodable(type: type))
+            strs.append(try generateDecodable(type: type))
         }
 
-        return strs.joined(separator: "\n")
+        return join(strs, "\n")
     }
 
     private func generateCodingKeys(type: EnumType) -> String {
-        var codingKeys: [String] = []
-
-        codingKeys.append("""
-    enum CodingKeys: Swift.CodingKey {
-\(lines: type.caseElements, { (c) in """
-        case \(c.name)
-"""})
-    }
-""")
-
-        for c in type.caseElements {
-            codingKeys.append("""
+        func caseCodingKey(_ c: CaseElement) -> String {
+            return join([
+                """
     enum \(codingKey(c)): Swift.CodingKey {
-\(lines: c.associatedValues.enumerated(), { (i, v) in """
+""",
+                join(c.associatedValues.enumerated().map { (i, v) in
+                    """
         case \(label(of: v, i))
-"""})
+"""
+                }),
+                """
     }
-""")
+"""
+            ])
         }
 
-        return """
+        var codingKeys: [String] = []
+
+        codingKeys.append(join([
+            """
+    enum CodingKeys: Swift.CodingKey {
+""",
+            join(type.caseElements.map { (c) in """
+        case \(c.name)
+"""
+            }),
+            """
+    }
+"""
+        ]))
+
+        codingKeys += type.caseElements.map {
+            caseCodingKey($0)
+        }
+
+
+        return join([
+            """
 extension \(type.name) {
-\(codingKeys.joined(separator: "\n\n"))
+""",
+            join(codingKeys, "\n\n"),
+            """
 }
 
 """
+        ])
     }
-    
-    private func generateEncodable(type: EnumType) -> String {
+
+    private func generateEncodable(type: EnumType) throws -> String {
         func nestedContainerVar(_ c: CaseElement) -> String {
             if c.associatedValues.isEmpty {
                 return "_"
@@ -65,8 +85,8 @@ extension \(type.name) {
             }
         }
 
-        func encodeValue(_ c: CaseElement, _ v: AssociatedValue, _ i: Int) -> String {
-            let (_, isOptional) = unwrapOptional(v.type)
+        func encodeValue(_ c: CaseElement, _ v: AssociatedValue, _ i: Int) throws -> String {
+            let (_, isOptional) = try unwrapOptional(try v.type())
 
             if isOptional {
                 return """
@@ -79,28 +99,39 @@ extension \(type.name) {
             }
         }
 
-        return """
+        func caseBlock(_ c: CaseElement) throws -> String {
+            try join([
+                """
+        case .\(c.name)\(pattern(of: c.associatedValues)):
+            \(nestedContainerVar(c)) = container.nestedContainer(keyedBy: \(codingKey(c)).self, forKey: .\(c.name))
+""",
+            ] + c.associatedValues.enumerated().map { (i, v) in
+                try encodeValue(c, v, i)
+            })
+        }
+
+        return join([
+            """
 extension \(type.name): Encodable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
-\(lines: type.caseElements, { (c) in """
-        case .\(c.name)\(pattern(of: c.associatedValues)):
-            \(nestedContainerVar(c)) = container.nestedContainer(keyedBy: \(codingKey(c)).self, forKey: .\(c.name))
-\(lines: c.associatedValues.enumerated(), { (i, v) in
-    encodeValue(c, v, i)
-})
-"""})
+""",
+            join(try type.caseElements.map {
+                try caseBlock($0)
+            }),
+            """
         }
     }
 }
 
 """
+        ])
     }
 
-    private func generateDecodable(type: EnumType) -> String {
-        func decodeValue(_ c: CaseElement, _ v: AssociatedValue, _ i: Int) -> String {
-            let (type, isOptional) = unwrapOptional(v.type)
+    private func generateDecodable(type: EnumType) throws -> String {
+        func decodeValue(_ c: CaseElement, _ v: AssociatedValue, _ i: Int) throws -> String {
+            let (type, isOptional) = try unwrapOptional(v.type())
 
             if isOptional {
                 return """
@@ -113,22 +144,33 @@ extension \(type.name): Encodable {
             }
         }
 
-        func decodeAssocs(_ c: CaseElement) -> String {
+        func decodeAssocs(_ c: CaseElement) throws -> [String] {
             if c.associatedValues.isEmpty {
-                return ""
+                return []
             }
 
-            return """
+            return try ["""
             let nestedContainer = try container.nestedContainer(keyedBy: \(codingKey(c)).self, forKey: .\(c.name))
-\(lines: c.associatedValues.enumerated(), { (i, v) in
-    decodeValue(c, v, i)
-})
 """
+            ] + c.associatedValues.enumerated().map { (i, v) in
+                try decodeValue(c, v, i)
+            }
         }
 
+        func caseBlock(_ c: CaseElement) throws -> String {
+            return try join([
+                """
+        case .\(c.name):
+"""
+            ] + decodeAssocs(c) + [
+                """
+            self = \(construct(c))
+"""
+            ])
+        }
 
-
-        return """
+        return join([
+            """
 extension \(type.name): Decodable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -137,19 +179,20 @@ extension \(type.name): Decodable {
                 codingPath: container.codingPath,
                 debugDescription: "Invalid number of keys found, expected one."
             )
-            throw DecodingError.typeMismatch(\(type.name).self, context)
+            throw DecodingError.typeMismatch(\(type).self, context)
         }
 
         switch container.allKeys.first.unsafelyUnwrapped {
-\(lines: type.caseElements, { (c) in """
-        case .\(c.name):
-\(decodeAssocs(c))
-            self = \(construct(c))
-"""})
+""",
+            try join(type.caseElements.map {
+                try caseBlock($0)
+            }),
+            """
         }
     }
 }
 
 """
+        ])
     }
 }

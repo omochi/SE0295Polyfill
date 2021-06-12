@@ -12,21 +12,23 @@ public final class App {
     }
 
     public func run(files: [URL]) throws {
-        var modules: [Module] = []
+        let modules = Modules()
+        var module: Module? = nil
+
         for file in files {
-            modules.append(
-                try Reader().read(file: file)
-            )
+            let reader = Reader(modules: modules)
+            let result = try reader.read(file: file, module: module)
+            module = result.module
         }
 
-        let enumTypes: [EnumType] = modules.flatMap { $0.types.compactMap { $0.enum } }
+        let enumTypes: [EnumType] = module?.types.compactMap { $0.enum } ?? []
         let generator = CodeGenerator()
         for enumType in enumTypes {
             guard let dir = enumType.file?.deletingLastPathComponent() else {
                 continue
             }
 
-            let code = generator.generate(type: enumType)
+            let code = try generator.generate(type: enumType)
             let file = dir.appendingPathComponent("\(enumType.name)-SE0295.gen.swift")
             try write(data: code.data(using: .utf8)!, file: file)
         }
