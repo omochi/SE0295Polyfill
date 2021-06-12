@@ -14,7 +14,7 @@ extension Command {
     }
 }
 
-extension Command: Encodable {
+extension Command {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
@@ -29,7 +29,7 @@ extension Command: Encodable {
     }
 }
 
-extension Command: Decodable {
+extension Command {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if container.allKeys.count != 1 {

@@ -1,3 +1,3 @@
-enum Command {
+enum Command: Codable {
   case dumpToDisk
 }

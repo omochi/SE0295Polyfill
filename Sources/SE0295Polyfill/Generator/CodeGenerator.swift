@@ -5,22 +5,33 @@ public final class CodeGenerator {
     public init() {}
     
     public func generate(
-        type: EnumType,
-        doesGenerateCodingKeys: Bool = true,
-        doesGenerateEncodable: Bool = true,
-        doesGenerateDecodable: Bool = true
-    ) throws -> String {
-        var strs: [String] = []
+        type: EnumType
+    ) throws -> String? {
+        let inherites = try type.inheritedTypes()
 
-        if doesGenerateCodingKeys {
-            strs.append(generateCodingKeys(type: type))
+        let isRawRepresentable = inherites.contains {
+            $0.name == "String"
+        }
+        if isRawRepresentable { return nil }
+
+        let isEncodable = inherites.contains {
+            $0.name == "Codable" || $0.name == "Encodable"
+        }
+        let isDecodable = inherites.contains {
+            $0.name == "Codable" || $0.name == "Decodable"
         }
 
-        if doesGenerateEncodable {
+        if !isEncodable, !isDecodable { return nil }
+
+        var strs: [String] = []
+
+        strs.append(generateCodingKeys(type: type))
+
+        if isEncodable {
             strs.append(try generateEncodable(type: type))
         }
 
-        if doesGenerateDecodable {
+        if isDecodable {
             strs.append(try generateDecodable(type: type))
         }
 
@@ -112,7 +123,7 @@ extension \(type.name) {
 
         return join([
             """
-extension \(type.name): Encodable {
+extension \(type.name) {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         switch self {
@@ -171,7 +182,7 @@ extension \(type.name): Encodable {
 
         return join([
             """
-extension \(type.name): Decodable {
+extension \(type.name) {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         if container.allKeys.count != 1 {

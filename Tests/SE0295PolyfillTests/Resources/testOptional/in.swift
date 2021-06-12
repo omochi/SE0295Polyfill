@@ -1,3 +1,3 @@
-enum E {
+enum E: Codable {
     case a(Int?, Int??, Int???)
 }

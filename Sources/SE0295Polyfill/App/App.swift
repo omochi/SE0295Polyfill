@@ -28,7 +28,10 @@ public final class App {
                 continue
             }
 
-            let code = try generator.generate(type: enumType)
+            guard let code = try generator.generate(type: enumType) else {
+                continue
+            }
+
             let file = dir.appendingPathComponent("\(enumType.name)-SE0295.gen.swift")
             try write(data: code.data(using: .utf8)!, file: file)
         }
