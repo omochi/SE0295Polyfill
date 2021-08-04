@@ -25,6 +25,10 @@ public final class CodeGenerator {
 
         var strs: [String] = []
 
+        if let imports = try generateImports(type: type) {
+            strs.append(imports)
+        }
+
         strs.append(generateCodingKeys(type: type))
 
         if isEncodable {
@@ -36,6 +40,19 @@ public final class CodeGenerator {
         }
 
         return join(strs, "\n")
+    }
+
+    private func generateImports(type: EnumType) throws -> String? {
+        guard let file = type.file else { return nil }
+        var importLines: [String] = []
+        try String(contentsOf: file).enumerateLines { line, _ in
+            if line.starts(with: "import ") {
+                importLines.append(line)
+            }
+        }
+
+        if importLines.isEmpty { return nil }
+        return join(importLines) + "\n"
     }
 
     private func generateCodingKeys(type: EnumType) -> String {

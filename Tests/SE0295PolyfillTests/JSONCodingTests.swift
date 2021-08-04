@@ -15,6 +15,10 @@ final class JSONCodingTests: XCTestCase {
         try assertCoding(directory: URL.resources.appendingPathComponent("test03"), type: "[Command]")
     }
 
+    func testImport() throws {
+        try assertCoding(directory: URL.resources.appendingPathComponent("testImport"), type: "[E]")
+    }
+
     private func assertCoding(directory: URL, type: String, file: StaticString = #file, line: UInt = #line) throws {
         let tempDir = try createTempDir()
         try fm.copyItem(
@@ -60,11 +64,23 @@ print(String(data: json, encoding: .utf8)!)
                 .filter { $0.pathExtension == "swift" }
                 ?? []
 
+            let errorPipe = Pipe()
+            var errorData = Data()
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             p.arguments = ["swiftc", "-o", "main"] + files.map { $0.path }
+            p.standardError = errorPipe
+            errorPipe.fileHandleForReading.readabilityHandler = { (h) in
+                errorData.append(h.availableData)
+            }
             try p.run()
             p.waitUntilExit()
+            guard p.terminationStatus == EXIT_SUCCESS else {
+                errorData.append(
+                    errorPipe.fileHandleForReading.readDataToEndOfFile()
+                )
+                throw ProcessError(stdError: String(decoding: errorData, as: UTF8.self))
+            }
         }
 
         func run() throws -> String {

@@ -15,6 +15,10 @@ final class GenerateTests: XCTestCase {
         try assertGenerate(directory: URL.resources.appendingPathComponent("test03"))
     }
 
+    func testImport() throws {
+        try assertGenerate(directory: URL.resources.appendingPathComponent("testImport"))
+    }
+
     func testOptional() throws {
         try assertGenerate(directory: URL.resources.appendingPathComponent("testOptional"))
     }

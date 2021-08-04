@@ -24,3 +24,7 @@ func createTempDir() throws -> URL {
     try fm.createDirectory(at: path, withIntermediateDirectories: false)
     return path
 }
+
+struct ProcessError: Error {
+    var stdError: String
+}
